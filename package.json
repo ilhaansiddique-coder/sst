@@ -1,0 +1,27 @@
+{
+  "name": "sst",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Server-side tracking platform monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run build --workspace @sst/shared",
+    "dev": "concurrently -n frontend,api,processor -c cyan,green,magenta \"npm run dev --workspace @sst/frontend\" \"npm run dev --workspace @sst/api\" \"npm run dev --workspace @sst/event-processor\"",
+    "dev:frontend": "npm run dev --workspace @sst/frontend",
+    "dev:api": "npm run dev --workspace @sst/api",
+    "dev:processor": "npm run dev --workspace @sst/event-processor",
+    "build": "npm run build --workspaces --if-present",
+    "docker:up": "docker compose up -d postgres redis clickhouse",
+    "docker:up:full": "docker compose --profile apps up --build",
+    "docker:down": "docker compose down",
+    "db:prisma:generate": "npm run prisma:generate --workspace @sst/api",
+    "db:prisma:migrate": "npm run prisma:migrate --workspace @sst/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.2"
+  }
+}

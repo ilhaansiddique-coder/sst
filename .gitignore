@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+
+.env
+.env.local
+.env.*.local
+
+apps/*/.env
+apps/*/.env.local
+
+postgres_data/
+redis_data/
+clickhouse_data/

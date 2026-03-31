@@ -1,0 +1,113 @@
+services:
+  - type: web
+    runtime: docker
+    name: sst-frontend
+    plan: free
+    dockerfilePath: ./apps/frontend/Dockerfile.render
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+    buildFilter:
+      paths:
+        - apps/frontend/**
+        - packages/shared/**
+        - package.json
+        - package-lock.json
+        - tsconfig.base.json
+
+  - type: web
+    runtime: docker
+    name: sst-api
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile.render
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sst-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: sst-redis
+          property: connectionString
+      - key: CLICKHOUSE_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: API_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/shared/**
+        - package.json
+        - package-lock.json
+        - tsconfig.base.json
+
+  - type: web
+    runtime: docker
+    name: sst-processor
+    plan: free
+    dockerfilePath: ./apps/event-processor/Dockerfile.render
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sst-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: sst-redis
+          property: connectionString
+      - key: CLICKHOUSE_URL
+        sync: false
+      - key: API_URL
+        sync: false
+    buildFilter:
+      paths:
+        - apps/event-processor/**
+        - packages/shared/**
+        - package.json
+        - package-lock.json
+        - tsconfig.base.json
+
+  - type: keyvalue
+    name: sst-redis
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: sst-postgres
+    plan: free
+    postgresMajorVersion: "16"
+    databaseName: tracking
+    user: tracking
+    ipAllowList: []

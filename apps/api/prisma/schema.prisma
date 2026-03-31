@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  hobby
+  starter
+  growth
+  scale
+  enterprise
+}
+
+enum UserRole {
+  owner
+  admin
+  member
+}
+
+enum ContainerRegion {
+  global
+  eu
+  us
+  apac
+}
+
+enum ContainerStatus {
+  active
+  paused
+  archived
+}
+
+enum GatewayProvider {
+  meta
+  tiktok
+  snap
+  ga4
+  google_ads
+}
+
+enum SubscriptionStatus {
+  active
+  past_due
+  canceled
+  trialing
+}
+
+model Account {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  slug         String         @unique
+  plan         Plan           @default(hobby)
+  eventQuota   BigInt         @default(500000) @map("event_quota")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  users        User[]
+  containers   Container[]
+  kvEntries    KvStore[]
+  gateways     GatewayConfig[]
+  subscriptions Subscription[]
+  usageMonthly UsageMonthly[]
+
+  @@map("accounts")
+}
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId     String    @map("account_id") @db.Uuid
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  role          UserRole  @default(member)
+  oauthProvider String?   @map("oauth_provider")
+  oauthId       String?   @map("oauth_id")
+  lastLogin     DateTime? @map("last_login") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  account       Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("users")
+}
+
+model Container {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId    String          @map("account_id") @db.Uuid
+  name         String
+  gtmId        String?         @map("gtm_id")
+  serverUrl    String?         @map("server_url")
+  customDomain String?         @map("custom_domain")
+  region       ContainerRegion @default(global)
+  status       ContainerStatus @default(active)
+  config       Json            @default("{}")
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  account      Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  gateways     GatewayConfig[]
+
+  @@map("containers")
+}
+
+model KvStore {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId  String    @map("account_id") @db.Uuid
+  collection String    @default("default")
+  key        String
+  value      Json
+  tags       String[]  @default([])
+  ttl        DateTime? @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  account    Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, collection, key])
+  @@map("kv_store")
+}
+
+model GatewayConfig {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId   String          @map("account_id") @db.Uuid
+  containerId String?         @map("container_id") @db.Uuid
+  provider    GatewayProvider
+  credentials Json
+  settings    Json            @default("{}")
+  enabled     Boolean         @default(true)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  container   Container?      @relation(fields: [containerId], references: [id], onDelete: SetNull)
+
+  @@map("gateway_configs")
+}
+
+model Subscription {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId          String             @map("account_id") @db.Uuid
+  stripeSubId        String?            @unique @map("stripe_sub_id")
+  plan               Plan
+  status             SubscriptionStatus
+  currentPeriodStart DateTime?          @map("current_period_start") @db.Timestamptz(6)
+  currentPeriodEnd   DateTime?          @map("current_period_end") @db.Timestamptz(6)
+  account            Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model UsageMonthly {
+  accountId    String   @map("account_id") @db.Uuid
+  month        DateTime @db.Date
+  eventsTotal  BigInt   @default(0) @map("events_total")
+  eventsMeta   BigInt   @default(0) @map("events_meta")
+  eventsTiktok BigInt   @default(0) @map("events_tiktok")
+  eventsGoogle BigInt   @default(0) @map("events_google")
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, month])
+  @@map("usage_monthly")
+}

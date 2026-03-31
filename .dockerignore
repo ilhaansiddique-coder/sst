@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.git
+.next
+dist
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local

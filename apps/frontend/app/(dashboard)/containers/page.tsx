@@ -1,22 +1,38 @@
 import { PageHeader } from "@/components/page-header";
 
-const containers = [
-  {
-    name: "Primary Storefront",
-    domain: "data.example.com",
-    region: "global",
-    status: "active",
-  },
-];
+import { fetchApi } from "@/lib/api";
 
-export default function ContainersPage() {
+type Container = {
+  id: string;
+  name: string;
+  customDomain?: string | null;
+  region: string;
+  status: string;
+};
+
+async function getContainers() {
+  try {
+    return await fetchApi<{ items: Container[]; total: number }>("/containers");
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export default async function ContainersPage() {
+  const { items } = await getContainers();
+  const containers = items.map((container) => ({
+    name: container.name,
+    domain: container.customDomain || "No custom domain configured",
+    region: container.region,
+    status: container.status,
+  }));
   return (
     <main className="space-y-6">
       <section className="panel rounded-[32px] p-8">
         <PageHeader
           eyebrow="Containers"
           title="sGTM container registry"
-          description="This page mirrors the blueprint route structure and is ready for live container provisioning workflows."
+          description="This page now reflects the PostgreSQL-backed container inventory exposed by the API."
         />
       </section>
 

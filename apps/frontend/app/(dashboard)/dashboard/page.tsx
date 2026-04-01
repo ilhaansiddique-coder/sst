@@ -1,32 +1,62 @@
 import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
+import { fetchApi } from "@/lib/api";
 
-const metrics = [
-  {
-    label: "Containers",
-    value: "1 seeded",
-    detail: "Starter sample data is exposed through the API scaffold.",
-  },
-  {
-    label: "Ingestion",
-    value: "202 accepted",
-    detail: "The event processor includes a validated `/events/ingest` endpoint.",
-  },
-  {
-    label: "Databases",
-    value: "3 services",
-    detail: "PostgreSQL, Redis, and ClickHouse are included in Compose.",
-  },
-];
+async function getDashboardMetrics() {
+  try {
+    const [containers, analytics] = await Promise.all([
+      fetchApi<{ items: Array<unknown>; total: number }>("/containers"),
+      fetchApi<{ totalEvents: number; uniqueClients: number }>("/analytics/summary?days=30"),
+    ]);
 
-export default function DashboardPage() {
+    return [
+      {
+        label: "Containers",
+        value: String(containers.total),
+        detail: "Provisioned container records now come from PostgreSQL.",
+      },
+      {
+        label: "30-day Events",
+        value: String(analytics.totalEvents),
+        detail: "Accepted events are persisted in ClickHouse for analytics and logs.",
+      },
+      {
+        label: "Unique Clients",
+        value: String(analytics.uniqueClients),
+        detail: "Redis and ClickHouse together support realtime counters plus historical queries.",
+      },
+    ];
+  } catch {
+    return [
+      {
+        label: "Containers",
+        value: "0",
+        detail: "Provisioned container records now come from PostgreSQL.",
+      },
+      {
+        label: "30-day Events",
+        value: "0",
+        detail: "Accepted events are persisted in ClickHouse for analytics and logs.",
+      },
+      {
+        label: "Unique Clients",
+        value: "0",
+        detail: "Redis and ClickHouse together support realtime counters plus historical queries.",
+      },
+    ];
+  }
+}
+
+export default async function DashboardPage() {
+  const metrics = await getDashboardMetrics();
+
   return (
     <main className="space-y-6">
       <section className="panel rounded-[32px] p-8">
         <PageHeader
           eyebrow="Overview"
           title="Development cockpit"
-          description="A clean local dashboard shell for the platform blueprint, ready for auth, analytics, provisioning, and billing work."
+          description="The platform now persists relational data in PostgreSQL, caches and sessions in Redis, and analytics events in ClickHouse."
         />
       </section>
 

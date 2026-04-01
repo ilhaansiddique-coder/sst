@@ -16,8 +16,8 @@ const metrics = [
   },
   {
     label: "Deployment Path",
-    value: "Docker Ready",
-    detail: "Compose files support database-only or full-stack startup paths.",
+    value: "Render Ready",
+    detail: "The monorepo is configured for native Render service deploys.",
   },
 ];
 

@@ -6,7 +6,7 @@ SST is a monorepo starter for a server-side tracking platform based on the March
 - Dashboard API: NestJS 10
 - Event processor: Fastify + TypeScript
 - Data layer: PostgreSQL 16, Redis 7, ClickHouse
-- Local orchestration: Docker Compose
+- Deployment: Render blueprint with native Node services
 
 ## Workspace
 
@@ -26,26 +26,23 @@ SST/
 
 ```bash
 npm install
-npm run docker:up
 npm run db:prisma:generate
 npm run dev
 ```
+
+Provide PostgreSQL, Redis, and ClickHouse separately and configure the connection values in `.env` before starting the apps. The SQL bootstrap files remain in `db/` for manual database setup.
 
 ## Service URLs
 
 - Frontend: `http://localhost:3000`
 - API: `http://localhost:3001/api`
 - Event processor: `http://localhost:3002`
-- PostgreSQL: `localhost:5432`
-- Redis: `localhost:6379`
-- ClickHouse: `http://localhost:8123`
 
-## Docker options
+## Database bootstrap
 
-```bash
-npm run docker:up
-npm run docker:up:full
-npm run docker:down
-```
+- PostgreSQL init: `db/postgres-init.sql`
+- ClickHouse init: `db/clickhouse-init.sql`
 
-`docker:up` starts only the databases for local development. `docker:up:full` also builds and runs the frontend, API, event processor, and nginx gateway using the local source tree.
+## Render deployment
+
+`render.yaml` defines the frontend, API, and event processor as native Render web services, along with managed Redis and Postgres resources.

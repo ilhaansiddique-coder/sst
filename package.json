@@ -14,9 +14,6 @@
     "dev:api": "npm run dev --workspace @sst/api",
     "dev:processor": "npm run dev --workspace @sst/event-processor",
     "build": "npm run build --workspaces --if-present",
-    "docker:up": "docker compose up -d postgres redis clickhouse",
-    "docker:up:full": "docker compose --profile apps up --build",
-    "docker:down": "docker compose down",
     "db:prisma:generate": "npm run prisma:generate --workspace @sst/api",
     "db:prisma:migrate": "npm run prisma:migrate --workspace @sst/api"
   },

@@ -14,3 +14,5 @@ apps/*/.env.local
 postgres_data/
 redis_data/
 clickhouse_data/
+
+*.zip

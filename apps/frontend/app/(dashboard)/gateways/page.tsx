@@ -1,28 +1,33 @@
 import { PageHeader } from "@/components/page-header";
+import { fetchApi } from "@/lib/auth";
+import { GatewayList } from "./_components/gateway-list";
 
-const gateways = ["Meta CAPI", "GA4", "TikTok Events", "Snap CAPI"];
+async function getGateways() {
+  try {
+    const { items } = await fetchApi<{ items: any[]; total: number }>("/gateways");
+    return items;
+  } catch (error) {
+    console.error("Failed to fetch gateways:", error);
+    return [];
+  }
+}
 
-export default function GatewaysPage() {
+export default async function GatewaysPage() {
+  const items = await getGateways();
+
   return (
     <main className="space-y-6">
-      <section className="panel rounded-[32px] p-8">
+      <header className="panel rounded-[42px] p-10 md:p-12">
         <PageHeader
-          eyebrow="Gateways"
-          title="Destination connectors"
-          description="Gateway tiles are ready to become credential forms and test-event panels for each ad platform."
+          eyebrow="Integrations"
+          title="Server-side destinations"
+          description="Send your server events to Meta CAPI, GA4, and other ad platforms with just few clicks. All events are enriched on the fly."
         />
-      </section>
+      </header>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        {gateways.map((gateway) => (
-          <div key={gateway} className="panel rounded-3xl p-6">
-            <h2 className="text-xl font-semibold text-ink">{gateway}</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Scaffolded placeholder for provider credentials, toggles, and test delivery.
-            </p>
-          </div>
-        ))}
-      </section>
+      <div className="px-1">
+        <GatewayList initialItems={items} />
+      </div>
     </main>
   );
 }

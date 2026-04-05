@@ -1,21 +1,41 @@
 import { PageHeader } from "@/components/page-header";
+import { fetchApi } from "@/lib/auth";
+import { StoreExplorer } from "./_components/store-explorer";
 
-export default function StorePage() {
+type KvEntry = {
+  id: string;
+  accountId: string;
+  collection: string;
+  key: string;
+  value: unknown;
+  tags: string[];
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+async function getStoreEntries() {
+  try {
+    return await fetchApi<KvEntry[]>("/store/default");
+  } catch {
+    return [];
+  }
+}
+
+export default async function StorePage() {
+  const entries = await getStoreEntries();
+
   return (
     <main className="space-y-6">
-      <section className="panel rounded-[32px] p-8">
+      <section className="panel rounded-[36px] p-8 md:p-10">
         <PageHeader
           eyebrow="Store"
           title="First-party data store"
-          description="The key-value store surface is reserved for the Stape Store equivalent backed by PostgreSQL and Redis."
+          description="TTL-aware key-value store backed by PostgreSQL and Redis. Store first-party customer data, consent records, and enrichment lookups."
         />
       </section>
 
-      <section className="panel rounded-3xl p-6">
-        <p className="text-sm text-slate-600">
-          Next step: connect this view to the `/store/:collection/:key` API surface and show TTL-aware records.
-        </p>
-      </section>
+      <StoreExplorer initialEntries={entries} />
     </main>
   );
 }

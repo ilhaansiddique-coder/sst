@@ -1,33 +1,40 @@
-import { Body, Controller, Get, Post, Query, Req, UsePipes } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Post, Req, UseGuards, UsePipes } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 
 import { upsertSubscriptionSchema, type UpsertSubscriptionInput } from "@sst/shared";
 
 import { AuthService } from "../auth/auth.service";
+import { Roles } from "../auth/roles.decorator";
+import { RolesGuard } from "../auth/roles.guard";
+import { SessionAuthGuard } from "../auth/session-auth.guard";
 import { ZodValidationPipe } from "../common/zod.pipe";
 import { BillingService } from "./billing.service";
 
 @Controller("billing")
+@UseGuards(SessionAuthGuard)
 export class BillingController {
   constructor(
-    private readonly authService: AuthService,
-    private readonly billingService: BillingService,
+    @Inject(AuthService) private readonly authService: AuthService,
+    @Inject(BillingService) private readonly billingService: BillingService,
   ) {}
 
   @Get()
-  async overview(@Req() request: FastifyRequest, @Query("accountId") accountId?: string) {
-    const resolvedAccountId = await this.authService.resolveAccountId(request, accountId);
+  @UseGuards(RolesGuard)
+  @Roles("owner", "admin")
+  async overview(@Req() request: FastifyRequest) {
+    const resolvedAccountId = await this.authService.requireAccountId(request);
     return this.billingService.getOverview(resolvedAccountId);
   }
 
   @Post("subscriptions")
   @UsePipes(new ZodValidationPipe(upsertSubscriptionSchema))
+  @UseGuards(RolesGuard)
+  @Roles("owner")
   async upsert(
     @Req() request: FastifyRequest,
     @Body() body: UpsertSubscriptionInput,
-    @Query("accountId") accountId?: string,
   ) {
-    const resolvedAccountId = await this.authService.requireAccountId(request, accountId);
+    const resolvedAccountId = await this.authService.requireAccountId(request);
     return this.billingService.upsertSubscription(resolvedAccountId, body);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import type { CreateContainerInput } from "@sst/shared";
 
@@ -6,11 +6,11 @@ import { PrismaService } from "../common/prisma.service";
 
 @Injectable()
 export class ContainersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  async list(accountId?: string) {
+  async list(accountId: string) {
     return this.prisma.container.findMany({
-      where: accountId ? { accountId } : undefined,
+      where: { accountId },
       orderBy: { createdAt: "desc" },
     });
   }

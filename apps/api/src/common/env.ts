@@ -5,6 +5,8 @@ const apiEnvSchema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   CLICKHOUSE_URL: z.string().url(),
+  CLICKHOUSE_USER: z.string().min(1).default("tracking"),
+  CLICKHOUSE_PASSWORD: z.string().default(""),
   JWT_SECRET: z.string().min(16),
   REFRESH_TOKEN_SECRET: z.string().min(16),
   ENCRYPTION_KEY: z.string().min(32),

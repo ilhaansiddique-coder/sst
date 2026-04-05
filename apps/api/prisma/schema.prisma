@@ -49,35 +49,48 @@ enum SubscriptionStatus {
   trialing
 }
 
+enum AuthTokenType {
+  email_verification
+  password_reset
+}
+
 model Account {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  slug         String         @unique
-  plan         Plan           @default(hobby)
-  eventQuota   BigInt         @default(500000) @map("event_quota")
-  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
-  users        User[]
-  containers   Container[]
-  kvEntries    KvStore[]
-  gateways     GatewayConfig[]
-  subscriptions Subscription[]
-  usageMonthly UsageMonthly[]
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  slug            String           @unique
+  plan            Plan             @default(hobby)
+  eventQuota      BigInt           @default(500000) @map("event_quota")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  users           User[]
+  containers      Container[]
+  kvEntries       KvStore[]
+  gateways        GatewayConfig[]
+  subscriptions   Subscription[]
+  usageMonthly    UsageMonthly[]
+  sessions        UserSession[]
+  authTokens      AuthToken[]
+  authAuditEvents AuthAuditEvent[]
 
   @@map("accounts")
 }
 
 model User {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  accountId     String    @map("account_id") @db.Uuid
-  email         String    @unique
-  passwordHash  String?   @map("password_hash")
-  role          UserRole  @default(member)
-  oauthProvider String?   @map("oauth_provider")
-  oauthId       String?   @map("oauth_id")
-  lastLogin     DateTime? @map("last_login") @db.Timestamptz(6)
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  account       Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId         String           @map("account_id") @db.Uuid
+  email             String           @unique
+  passwordHash      String?          @map("password_hash")
+  role              UserRole         @default(member)
+  oauthProvider     String?          @map("oauth_provider")
+  oauthId           String?          @map("oauth_id")
+  emailVerifiedAt   DateTime?        @map("email_verified_at") @db.Timestamptz(6)
+  passwordChangedAt DateTime?        @map("password_changed_at") @db.Timestamptz(6)
+  lastLogin         DateTime?        @map("last_login") @db.Timestamptz(6)
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  account           Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sessions          UserSession[]
+  authTokens        AuthToken[]
+  authAuditEvents   AuthAuditEvent[]
 
   @@map("users")
 }
@@ -154,4 +167,57 @@ model UsageMonthly {
 
   @@id([accountId, month])
   @@map("usage_monthly")
+}
+
+model UserSession {
+  id         String    @id @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  accountId  String    @map("account_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime  @map("last_seen_at") @db.Timestamptz(6)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+  account    Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([accountId, userId])
+  @@map("user_sessions")
+}
+
+model AuthToken {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String        @map("user_id") @db.Uuid
+  accountId  String        @map("account_id") @db.Uuid
+  type       AuthTokenType
+  tokenHash  String        @unique @map("token_hash")
+  expiresAt  DateTime      @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime?     @map("consumed_at") @db.Timestamptz(6)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  account    Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, consumedAt, expiresAt])
+  @@index([accountId, type])
+  @@map("auth_tokens")
+}
+
+model AuthAuditEvent {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId  String?   @map("account_id") @db.Uuid
+  userId     String?   @map("user_id") @db.Uuid
+  eventType  String    @map("event_type")
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+  metadata   Json      @default("{}")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  account    Account?  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, createdAt])
+  @@index([userId, createdAt])
+  @@map("auth_audit_events")
 }

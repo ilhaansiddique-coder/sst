@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import type { UpsertSubscriptionInput } from "@sst/shared";
 
@@ -13,26 +13,26 @@ function currentUsageMonth(): string {
 @Injectable()
 export class BillingService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(RedisService) private readonly redis: RedisService,
   ) {}
 
-  async getOverview(accountId?: string) {
+  async getOverview(accountId: string) {
     const subscriptions = await this.prisma.subscription.findMany({
-      where: accountId ? { accountId } : undefined,
+      where: { accountId },
       orderBy: { currentPeriodEnd: "desc" },
       include: { account: true },
     });
 
     const usageRows = await this.prisma.usageMonthly.findMany({
-      where: accountId ? { accountId } : undefined,
+      where: { accountId },
       orderBy: { month: "desc" },
       take: 6,
     });
 
-    const realtimeUsage = accountId
-      ? await this.redis.client.hgetall(`sst:usage:${accountId}:${currentUsageMonth()}`)
-      : {};
+    const realtimeUsage = await this.redis.client.hgetall(
+      `sst:usage:${accountId}:${currentUsageMonth()}`,
+    );
 
     return {
       subscriptions: subscriptions.map((subscription) => ({

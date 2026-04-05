@@ -1,6 +1,6 @@
 import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
-import { fetchApi } from "@/lib/api";
+import { fetchApi } from "@/lib/auth";
 
 async function getDashboardMetrics() {
   try {
@@ -52,7 +52,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="space-y-6">
-      <section className="panel rounded-[32px] p-8">
+      <section className="panel rounded-[36px] p-8 md:p-10">
         <PageHeader
           eyebrow="Overview"
           title="Development cockpit"

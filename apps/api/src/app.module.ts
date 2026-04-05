@@ -4,6 +4,8 @@ import { AppController } from "./app.controller";
 import { AnalyticsController } from "./analytics/analytics.controller";
 import { AnalyticsService } from "./analytics/analytics.service";
 import { AuthController } from "./auth/auth.controller";
+import { RolesGuard } from "./auth/roles.guard";
+import { SessionAuthGuard } from "./auth/session-auth.guard";
 import { AuthService } from "./auth/auth.service";
 import { BillingController } from "./billing/billing.controller";
 import { BillingService } from "./billing/billing.service";
@@ -14,6 +16,7 @@ import { ContainersController } from "./containers/containers.controller";
 import { ContainersService } from "./containers/containers.service";
 import { EventsController } from "./events/events.controller";
 import { EventsService } from "./events/events.service";
+import { DestinationService } from "./events/destination.service";
 import { GatewaysController } from "./gateways/gateways.controller";
 import { GatewaysService } from "./gateways/gateways.service";
 import { StoreController } from "./store/store.controller";
@@ -36,10 +39,13 @@ import { StoreService } from "./store/store.service";
     BillingService,
     ClickHouseService,
     ContainersService,
+    DestinationService,
     EventsService,
     GatewaysService,
     PrismaService,
     RedisService,
+    RolesGuard,
+    SessionAuthGuard,
     StoreService,
   ],
 })

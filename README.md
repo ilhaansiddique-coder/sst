@@ -26,11 +26,30 @@ SST/
 
 ```bash
 npm install
+npm run services:up
 npm run db:prisma:generate
 npm run dev
 ```
 
-Provide PostgreSQL, Redis, and ClickHouse separately and configure the connection values in `.env` before starting the apps. The SQL bootstrap files remain in `db/` for manual database setup.
+The repo now includes a local `docker-compose.yml` that starts PostgreSQL, Redis, and ClickHouse with the same defaults used in `.env`.
+
+## Local defaults
+
+- PostgreSQL: database `tracking`, user `tracking`, password `tracking_dev_password`, port `5432`
+- Redis: password `tracking_redis_password`, port `6379`
+- ClickHouse: database `tracking`, default user with no password, port `8123`
+
+If you prefer bringing the dependencies up yourself, configure PostgreSQL, Redis, and ClickHouse separately and keep the connection values in `.env` aligned with those services.
+
+To inspect or reset the local stack:
+
+```bash
+npm run services:logs
+npm run services:down
+npm run services:reset
+```
+
+The SQL bootstrap files remain in `db/` and are mounted automatically into the Docker services on first startup.
 
 ## Service URLs
 

@@ -1,12 +1,16 @@
 import { PageHeader } from "@/components/page-header";
+import { fetchApi } from "@/lib/auth";
+import { deriveContainerServerUrl, getProcessorBaseUrl } from "@/lib/processor-url";
 
-import { fetchApi } from "@/lib/api";
+import { ContainerRegistry } from "./_components/container-registry";
 
 type Container = {
   id: string;
+  gtmId?: string | null;
+  serverUrl?: string | null;
   name: string;
   customDomain?: string | null;
-  region: string;
+  region: "global" | "eu" | "us" | "apac";
   status: string;
 };
 
@@ -18,21 +22,55 @@ async function getContainers() {
   }
 }
 
+async function getProcessorStatus(processorBaseUrl: string) {
+  try {
+    const response = await fetch(`${processorBaseUrl}/health`, {
+      cache: "no-store",
+    });
+
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 export default async function ContainersPage() {
   const { items } = await getContainers();
+  const processorBaseUrl = getProcessorBaseUrl();
+  const processorHealthy = await getProcessorStatus(processorBaseUrl);
   const containers = items.map((container) => ({
-    name: container.name,
-    domain: container.customDomain || "No custom domain configured",
-    region: container.region,
-    status: container.status,
+    ...container,
+    domain: container.customDomain || "Using shared processor URL",
+    serverUrl: deriveContainerServerUrl({
+      customDomain: container.customDomain,
+      serverUrl: container.serverUrl,
+      processorBaseUrl,
+    }),
   }));
   return (
     <main className="space-y-6">
       <section className="panel rounded-[32px] p-8">
         <PageHeader
           eyebrow="Containers"
-          title="sGTM container registry"
-          description="This page now reflects the PostgreSQL-backed container inventory exposed by the API."
+          title="sGTM collector registry"
+          description="Create an SST collector container, expose its event endpoints, and point client traffic into your server-side pipeline."
+        />
+      </section>
+
+      <ContainerRegistry
+        initialItems={containers}
+        processorBaseUrl={processorBaseUrl}
+        processorHealthy={processorHealthy}
+      />
+    </main>
+  );
+  return (
+    <main className="space-y-6">
+      <section className="panel rounded-[32px] p-8">
+        <PageHeader
+          eyebrow="Containers"
+          title="sGTM collector registry"
+          description="Create an SST collector container, expose its event endpoints, and point client traffic into your server-side pipeline."
         />
       </section>
 

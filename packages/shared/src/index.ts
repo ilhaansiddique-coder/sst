@@ -5,16 +5,45 @@ export const gatewayProviderSchema = z.enum(["meta", "tiktok", "snap", "ga4", "g
 export const planSchema = z.enum(["hobby", "starter", "growth", "scale", "enterprise"]);
 export const subscriptionStatusSchema = z.enum(["active", "past_due", "canceled", "trialing"]);
 export const eventLogStatusSchema = z.enum(["received", "processed", "failed", "delivered"]);
+export const passwordSchema = z
+  .string()
+  .min(12, "Password must be at least 12 characters long.")
+  .max(128, "Password must be 128 characters or fewer.")
+  .refine((value) => /[a-z]/.test(value), "Password must include a lowercase letter.")
+  .refine((value) => /[A-Z]/.test(value), "Password must include an uppercase letter.")
+  .refine((value) => /\d/.test(value), "Password must include a number.")
+  .refine(
+    (value) => /[^A-Za-z0-9]/.test(value),
+    "Password must include a symbol or punctuation character.",
+  );
 
 export const registerSchema = z.object({
   accountName: z.string().min(2).max(120),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: passwordSchema,
 });
 
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+});
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(32).max(512),
+});
+
+export const requestPasswordResetSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(32).max(512),
+  password: passwordSchema,
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(8),
+  newPassword: passwordSchema,
 });
 
 export const createContainerSchema = z.object({
@@ -77,6 +106,10 @@ export const kvEntryWriteSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type CreateContainerInput = z.infer<typeof createContainerSchema>;
 export type TrackingEventInput = z.infer<typeof trackingEventSchema>;
 export type EventLogRecordInput = z.infer<typeof eventLogRecordSchema>;

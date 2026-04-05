@@ -28,3 +28,8 @@ export function readBearerToken(request: RequestLike): string | undefined {
 
   return token;
 }
+
+export function getUserAgent(request: RequestLike): string | undefined {
+  const userAgent = request.headers?.["user-agent"];
+  return typeof userAgent === "string" && userAgent.length > 0 ? userAgent : undefined;
+}

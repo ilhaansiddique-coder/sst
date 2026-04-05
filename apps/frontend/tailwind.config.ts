@@ -19,7 +19,8 @@ const config: Config = {
         panel: "0 24px 60px rgba(16, 24, 38, 0.08)",
       },
       fontFamily: {
-        sans: ["Segoe UI", "Tahoma", "Geneva", "Verdana", "sans-serif"],
+        sans: ["Trebuchet MS", "Avenir Next", "Segoe UI", "sans-serif"],
+        display: ["var(--font-playfair-display)", "Times New Roman", "Georgia", "serif"],
       },
     },
   },

@@ -1,0 +1,139 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}{\f1 Consolas;}}
+\fs24
+\b SST Workflow Tracker\b0\line
+Date: 2026-04-04\line
+\line
+\b 1. Current Stage\b0\line
+- Login/register backend is working.\line
+- Dashboard access flow is implemented.\line
+- Gateway/platform integration UI is still placeholder.\line
+- Real Meta/GA4/TikTok delivery is not implemented yet.\line
+\line
+\b 2. What Is Confirmed Working\b0\line
+- PostgreSQL connection now works with:\line
+  User: tracking\line
+  Password: psql042026\line
+  Database: sstracking\line
+- API auth smoke test passed:\line
+  Health: ok\line
+  Register: ok\line
+  Login: ok\line
+  Protected containers route: ok\line
+\line
+\b 3. Login/Register Workflow\b0\line
+\b Frontend flow\b0\line
+1. User opens /login or /register.\line
+2. Form submits to Next.js server action.\line
+3. Server action calls platform API.\line
+4. On success, frontend stores session token in cookie.\line
+5. User is redirected to /dashboard.\line
+\line
+\b Main frontend files\b0\line
+- apps/frontend/app/login/page.tsx\line
+- apps/frontend/app/register/page.tsx\line
+- apps/frontend/app/actions/auth.ts\line
+- apps/frontend/components/auth/login-form.tsx\line
+- apps/frontend/components/auth/register-form.tsx\line
+- apps/frontend/lib/auth.ts\line
+\line
+\b Backend flow\b0\line
+1. POST /api/auth/register creates account, user, subscription.\line
+2. POST /api/auth/login verifies password and updates lastLogin.\line
+3. API issues opaque bearer session token.\line
+4. Session is stored in Redis.\line
+5. Protected routes use the session token to identify account/user.\line
+\line
+\b Main backend files\b0\line
+- apps/api/src/auth/auth.controller.ts\line
+- apps/api/src/auth/auth.service.ts\line
+- apps/api/src/auth/session-auth.guard.ts\line
+- apps/api/src/auth/roles.guard.ts\line
+\line
+\b Important note\b0\line
+Auth is currently Redis-backed session token auth, not true JWT auth.\line
+\line
+\b 4. Dashboard Entry Workflow\b0\line
+1. User reaches a protected dashboard route.\line
+2. Frontend checks cookie/session.\line
+3. Frontend calls /api/auth/me.\line
+4. If valid, dashboard renders.\line
+5. If invalid, user is redirected to /login.\line
+\line
+\b Main dashboard protection files\b0\line
+- apps/frontend/app/(dashboard)/layout.tsx\line
+- apps/frontend/lib/auth.ts\line
+- apps/frontend/proxy.ts\line
+\line
+\b 5. Platform Integration Workflow (Target Design)\b0\line
+This is how Meta/GA4/TikTok should work once built.\line
+\line
+1. User opens /gateways in dashboard.\line
+2. User enters provider credentials, such as Meta Pixel ID and Access Token.\line
+3. Frontend sends those credentials to the platform API.\line
+4. Platform API checks session and account/container ownership.\line
+5. Platform API stores config in PostgreSQL table gateway_configs.\line
+6. Event processor receives tracking events.\line
+7. Event processor loads enabled gateway configs for that account/container.\line
+8. Event processor transforms internal event to provider-specific payload.\line
+9. Event processor sends to Meta/GA4/TikTok external APIs.\line
+10. Delivery result is logged for dashboard logs/analytics.\line
+\line
+\b Important distinction\b0\line
+- Platform API = your NestJS backend.\line
+- Meta API = Facebook external API.\line
+\line
+\b 6. What Exists Already for Platform Integrations\b0\line
+- Gateway config backend CRUD exists.\line
+- Event processor intake exists.\line
+- ClickHouse event persistence exists.\line
+- Analytics/log pages exist.\line
+\line
+\b Existing files\b0\line
+- apps/api/src/gateways/gateways.controller.ts\line
+- apps/api/src/gateways/gateways.service.ts\line
+- apps/event-processor/src/index.ts\line
+- apps/frontend/app/(dashboard)/analytics/page.tsx\line
+- apps/frontend/app/(dashboard)/logs/page.tsx\line
+\line
+\b 7. What Is Still Missing\b0\line
+- Real gateway credential forms in UI.\line
+- Credential encryption at rest.\line
+- Meta payload mapper and sender.\line
+- GA4 payload mapper and sender.\line
+- TikTok payload mapper and sender.\line
+- Router/fan-out to multiple providers.\line
+- Delivery success/failure status logging in dashboard UI.\line
+\line
+\b 8. Current Gateway UI Status\b0\line
+The gateways page is still a placeholder/scaffold, not a completed integration screen.\line
+\line
+\b Main placeholder file\b0\line
+- apps/frontend/app/(dashboard)/gateways/page.tsx\line
+\line
+\b 9. Recommended Next Work Order\b0\line
+1. Visually test login/register from frontend and confirm dashboard entry.\line
+2. Replace /gateways placeholder with real provider form UI.\line
+3. Implement Meta CAPI end to end first.\line
+4. Add router/fan-out and delivery status tracking.\line
+5. Add GA4 and TikTok after Meta works.\line
+\line
+\b 10. Tomorrow Start Here\b0\line
+First question to answer tomorrow:\line
+Can the frontend visually log in and enter dashboard against the running API?\line
+\line
+If yes, start implementing the /gateways UI and Meta credential save flow.\line
+\line
+\b 11. Useful Commands\b0\line
+\f1
+npm run verify:foundation\line
+\f0
+Purpose: checks health, register, login, and protected containers route.\line
+\line
+\f1
+SELECT current_database(), current_user;\line
+\f0
+Purpose: confirm PostgreSQL session is using sstracking / tracking.\line
+\line
+\b End of handoff\b0\line
+}

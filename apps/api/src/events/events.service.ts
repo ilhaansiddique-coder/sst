@@ -1,18 +1,20 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import type { EventLogRecordInput } from "@sst/shared";
 
 import { ClickHouseService } from "../common/clickhouse.service";
 import { PrismaService } from "../common/prisma.service";
+import { DestinationService } from "./destination.service";
 
 @Injectable()
 export class EventsService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly clickhouse: ClickHouseService,
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(ClickHouseService) private readonly clickhouse: ClickHouseService,
+    @Inject(DestinationService) private readonly destination: DestinationService,
   ) {}
 
-  async list(limit: number, accountId?: string, containerId?: string) {
+  async list(limit: number, accountId: string, containerId?: string) {
     const items = await this.clickhouse.listRecentEvents({
       limit,
       accountId,
@@ -64,6 +66,12 @@ export class EventsService {
         eventsGoogle: { increment: googleIncrement },
       },
     });
+
+    try {
+      await this.destination.deliver(record);
+    } catch (error) {
+      console.error(`Destination delivery error: ${error}`);
+    }
 
     return {
       accepted: true,

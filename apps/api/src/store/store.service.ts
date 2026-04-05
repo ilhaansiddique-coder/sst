@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 
 import type { KvEntryWriteInput } from "@sst/shared";
 
@@ -8,8 +8,8 @@ import { RedisService } from "../common/redis.service";
 @Injectable()
 export class StoreService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(RedisService) private readonly redis: RedisService,
   ) {}
 
   async list(accountId: string, collection: string, limit: number) {

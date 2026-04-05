@@ -39,8 +39,11 @@ type TimeseriesRow = {
 
 @Injectable()
 export class ClickHouseService implements OnModuleDestroy {
+  private readonly env = getApiEnv();
   private readonly client: ClickHouseClient = createClient({
-    url: getApiEnv().CLICKHOUSE_URL,
+    url: this.env.CLICKHOUSE_URL,
+    username: this.env.CLICKHOUSE_USER,
+    password: this.env.CLICKHOUSE_PASSWORD,
   });
 
   async ping(): Promise<boolean> {

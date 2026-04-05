@@ -13,6 +13,11 @@
     "dev:frontend": "npm run dev --workspace @sst/frontend",
     "dev:api": "npm run dev --workspace @sst/api",
     "dev:processor": "npm run dev --workspace @sst/event-processor",
+    "verify:foundation": "node scripts/verify-foundation.mjs",
+    "services:up": "docker compose up -d postgres redis clickhouse",
+    "services:down": "docker compose down",
+    "services:logs": "docker compose logs -f postgres redis clickhouse",
+    "services:reset": "docker compose down -v",
     "build": "npm run build --workspaces --if-present",
     "db:prisma:generate": "npm run prisma:generate --workspace @sst/api",
     "db:prisma:migrate": "npm run prisma:migrate --workspace @sst/api"

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import { ClickHouseService } from "../common/clickhouse.service";
 import { RedisService } from "../common/redis.service";
@@ -11,20 +11,20 @@ function currentUsageMonth(): string {
 @Injectable()
 export class AnalyticsService {
   constructor(
-    private readonly clickhouse: ClickHouseService,
-    private readonly redis: RedisService,
+    @Inject(ClickHouseService) private readonly clickhouse: ClickHouseService,
+    @Inject(RedisService) private readonly redis: RedisService,
   ) {}
 
-  async getOverview(days: number, accountId?: string, containerId?: string) {
+  async getOverview(days: number, accountId: string, containerId?: string) {
     const summary = await this.clickhouse.getAnalyticsSummary({
       days,
       accountId,
       containerId,
     });
 
-    const realtimeUsage = accountId
-      ? await this.redis.client.hgetall(`sst:usage:${accountId}:${currentUsageMonth()}`)
-      : {};
+    const realtimeUsage = await this.redis.client.hgetall(
+      `sst:usage:${accountId}:${currentUsageMonth()}`,
+    );
 
     return {
       days,
@@ -37,7 +37,7 @@ export class AnalyticsService {
     };
   }
 
-  async getTimeseries(days: number, accountId?: string, containerId?: string) {
+  async getTimeseries(days: number, accountId: string, containerId?: string) {
     const rows = await this.clickhouse.getEventTimeseries({
       days,
       accountId,

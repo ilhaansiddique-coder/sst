@@ -65,3 +65,4 @@ The SQL bootstrap files remain in `db/` and are mounted automatically into the D
 ## Render deployment
 
 `render.yaml` defines the frontend, API, and event processor as native Render web services, along with managed Redis and Postgres resources.
+# Server-Side-Tracking
